@@ -90,43 +90,37 @@ def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
 @app.route("/generate-plot", methods=["POST"])
 def handle_plot_request():
     try:
-        print("🟡 Request started")
+        time.sleep(1)
 
         creds_info = json.loads(os.environ["GOOGLE_CREDS"])
-        print("✅ Credentials loaded")
-
         creds = Credentials.from_service_account_info(creds_info, scopes=[
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ])
         gc = gspread.authorize(creds)
-        print("✅ gspread authorized")
-
         SHEET_ID = "1sVoCG-ikThXfEPlhmaJpqRaZiFoI8rAebiUSTYmbKGI"
         sh = gc.open_by_key(SHEET_ID)
-        print("✅ Sheet opened")
 
         calculator = sh.worksheet("Calculator")  
         boys_centile_sheet = sh.worksheet("Boy's Centile")  
         girls_centile_sheet = sh.worksheet("Girl's Centile")
-        print("✅ Worksheets loaded")
 
         boys_centile_df = pd.DataFrame(boys_centile_sheet.get_all_records())
         girls_centile_df = pd.DataFrame(girls_centile_sheet.get_all_records())
         patient_df = pd.DataFrame(calculator.get_all_records())
-        print("✅ DataFrames created")
+        sns.set_theme(style="whitegrid")
 
         image_url = plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df)
         if image_url:
-            print("✅ Image URL:", image_url)
             return jsonify({ "image_url": image_url })
         else:
-            print("❌ Plot or upload failed")
             return jsonify({ "error": "Plot generation or upload failed" }), 500
 
     except Exception as e:
-        print("❌ Exception in /generate-plot:", e)
+        import traceback
+        traceback.print_exc()
         return jsonify({ "error": str(e) }), 500
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
