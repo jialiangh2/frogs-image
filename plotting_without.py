@@ -94,7 +94,7 @@ def handle_plot_request():
     creds = Credentials.from_service_account_info(creds_info, scopes=[
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
-    ]
+    ])
     gc = gspread.authorize(creds)
     SHEET_ID = "1sVoCG-ikThXfEPlhmaJpqRaZiFoI8rAebiUSTYmbKGI"
     sh = gc.open_by_key(SHEET_ID)
