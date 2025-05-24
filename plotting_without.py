@@ -5,12 +5,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import time
-import requests
 import os
+import io
+import base64
 import json
-import sys
+
 app = Flask(__name__)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', buffering=1)
+
 def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
     required_cols = ["Fetal Sex (Male, Female or Unknown)", "Birthweight (grams)", "Gestation (days)"]
     filtered_df = patient_df.dropna(subset=required_cols)
@@ -19,7 +20,6 @@ def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
         filtered_df = filtered_df[filtered_df[col].astype(str).str.strip() != ""]
 
     if filtered_df.empty:
-        print("No valid data available.")
         return None
 
     last_row = filtered_df.iloc[-1]
@@ -32,7 +32,6 @@ def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
         centile_df = girls_centile_df
         line_style = "solid"
     else:
-        print(f"Unsupported gender: {gender}")
         return None
 
     plt.figure(figsize=(10, 6))
@@ -65,28 +64,12 @@ def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
     plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
     plt.tight_layout()
 
-    filename = f"plot_{int(time.time())}.png"
-    plt.savefig(filename, bbox_inches='tight')
-    print("Plot saved:", filename)
-
-    headers = {
-        "Authorization": "Client-ID 521032b75903077"
-    }
-
-    with open(filename, "rb") as img:
-        response = requests.post(
-            "https://api.imgur.com/3/image",
-            headers=headers,
-            files={"image": img}
-        )
-
-    if response.status_code == 200:
-        image_url = response.json()["data"]["link"]
-        print("✅ Imgur upload complete:", image_url)
-        return image_url
-    else:
-        print("❌ Upload failed:", response.text)
-        return None
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+    return image_base64
 
 @app.route("/generate-plot", methods=["POST"])
 def handle_plot_request():
@@ -99,9 +82,9 @@ def handle_plot_request():
             "https://www.googleapis.com/auth/drive"
         ])
         gc = gspread.authorize(creds)
+
         SHEET_ID = "1sVoCG-ikThXfEPlhmaJpqRaZiFoI8rAebiUSTYmbKGI"
         sh = gc.open_by_key(SHEET_ID)
-
         calculator = sh.worksheet("Calculator")  
         boys_centile_sheet = sh.worksheet("Boy's Centile")  
         girls_centile_sheet = sh.worksheet("Girl's Centile")
@@ -111,17 +94,16 @@ def handle_plot_request():
         patient_df = pd.DataFrame(calculator.get_all_records())
         sns.set_theme(style="whitegrid")
 
-        image_url = plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df)
-        if image_url:
-            return jsonify({ "image_url": image_url })
+        image_base64 = plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df)
+        if image_base64:
+            return jsonify({ "image_base64": image_base64 })
         else:
-            return jsonify({ "error": "Plot generation or upload failed" }), 500
+            return jsonify({ "error": "Plot generation failed" }), 500
 
     except Exception as e:
         import traceback
         traceback.print_exc()
         return jsonify({ "error": str(e) }), 500
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
