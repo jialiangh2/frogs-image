@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import time
 import requests
 import os
+import json
 app = Flask(__name__)
 
 def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
