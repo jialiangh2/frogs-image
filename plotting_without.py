@@ -9,7 +9,7 @@ import requests
 import os
 import json
 app = Flask(__name__)
-
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', buffering=1)
 def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
     required_cols = ["Fetal Sex (Male, Female or Unknown)", "Birthweight (grams)", "Gestation (days)"]
     filtered_df = patient_df.dropna(subset=required_cols)
