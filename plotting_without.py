@@ -90,10 +90,11 @@ def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
 def handle_plot_request():
     time.sleep(1)  # Allow time for Sheets to update
 
-    creds = Credentials.from_service_account_file("credentials.json", scopes=[
+    creds_info = json.loads(os.environ["GOOGLE_CREDS"])
+    creds = Credentials.from_service_account_info(creds_info, scopes=[
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
-    ])
+    ]
     gc = gspread.authorize(creds)
     SHEET_ID = "1sVoCG-ikThXfEPlhmaJpqRaZiFoI8rAebiUSTYmbKGI"
     sh = gc.open_by_key(SHEET_ID)
