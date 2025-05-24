@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import time
 import requests
-
+import os
 app = Flask(__name__)
 
 def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
@@ -114,4 +114,5 @@ def handle_plot_request():
         return jsonify({ "error": "Plot generation or upload failed" }), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
