@@ -8,6 +8,7 @@ import time
 import requests
 import os
 import json
+import sys
 app = Flask(__name__)
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', buffering=1)
 def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
