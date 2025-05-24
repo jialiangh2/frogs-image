@@ -70,7 +70,7 @@ def plot_last_patient_centile(patient_df, boys_centile_df, girls_centile_df):
     print("Plot saved:", filename)
 
     headers = {
-        "Authorization": "Client-ID a423b4dd7a62263"
+        "Authorization": "Client-ID 521032b75903077"
     }
 
     with open(filename, "rb") as img:
